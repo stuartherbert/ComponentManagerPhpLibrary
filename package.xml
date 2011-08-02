@@ -45,19 +45,19 @@ ${contents}
       <package>
         <name>Autoloader</name>
         <channel>pear.phix-project.org</channel>
-        <min>2.0.0</min>
-	      <max>2.999.9999</max>
+        <min>3.0.0</min>
+	      <max>3.999.9999</max>
       </package>
       <package>
         <name>ComponentManagerShared</name>
         <channel>pear.phix-project.org</channel>
-        <min>1.0.0</min>
-        <max>1.999.9999</max>
+        <min>2.0.0</min>
+        <max>2.999.9999</max>
       </package>
       <package>
         <name>phix</name>
         <channel>pear.phix-project.org</channel>
-        <min>0.11.1</min>
+        <min>0.13.0</min>
         <max>1.999.9999</max>
       </package>
     </required>
