@@ -4,14 +4,14 @@
     http://pear.php.net/dtd/package-2.0
     http://pear.php.net/dtd/package-2.0.xsd">
   <name>ComponentManagerPhpLibrary</name>
-  <channel>pear.gradwell.com</channel>
+  <channel>pear.phix-project.org</channel>
   <summary>Supports creating and managing a php-library component</summary>
   <description>
     ComponentManagerPhpLibrary contains the code and skeleton files required to create and manage a php-library component.
   </description>
   <lead>
     <name>Stuart Herbert</name>
-    <user>stuartherbert</user>
+    <user>stuart</user>
     <email>stuart@stuartherbert.com</email>
     <active>yes</active>
   </lead>
@@ -44,19 +44,19 @@ ${contents}
       </pearinstaller>
       <package>
         <name>Autoloader</name>
-        <channel>pear.gradwell.com</channel>
+        <channel>pear.phix-project.org</channel>
         <min>2.0.0</min>
 	      <max>2.999.9999</max>
       </package>
       <package>
         <name>ComponentManagerShared</name>
-        <channel>pear.gradwell.com</channel>
+        <channel>pear.phix-project.org</channel>
         <min>1.0.0</min>
         <max>1.999.9999</max>
       </package>
       <package>
         <name>phix</name>
-        <channel>pear.gradwell.com</channel>
+        <channel>pear.phix-project.org</channel>
         <min>0.11.1</min>
         <max>1.999.9999</max>
       </package>

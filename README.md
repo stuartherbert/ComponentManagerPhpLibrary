@@ -12,8 +12,8 @@ ComponentManagerPhpLibrary is normally installed as a dependency; i.e. it gets i
 
 If you want to install it yourself, you can do so using using the [PEAR Installer](http://pear.php.net). This installer is the community's de-facto standard for distributing PHP components.
 
-    sudo pear channel-discover pear.gradwell.com
-    sudo pear install --alldeps Gradwell/ComponentManagerPhpLibrary
+    sudo pear channel-discover pear.phix-project.org
+    sudo pear install --alldeps phix/ComponentManagerPhpLibrary
 
 After installation, you will find the code inside your local PEAR repository, which on Linux systems is normally /usr/share/php.
 
@@ -73,7 +73,7 @@ If you want to patch or enhance this component, you will need to create a suitab
 You can then clone the git repository:
 
     # ComponentManagerPhpLibrary
-    git clone git://github.com/Gradwell/ComponentManagerPhpLibrary.git
+    git clone git://github.com/stuartherbert/ComponentManagerPhpLibrary.git
 
 You will then need to populate the vendor folder, to build a local copy of all of the dependencies for 
 
