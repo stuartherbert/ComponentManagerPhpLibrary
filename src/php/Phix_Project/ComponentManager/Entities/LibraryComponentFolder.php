@@ -48,7 +48,7 @@ namespace Phix_Project\ComponentManager\Entities;
 
 class LibraryComponentFolder extends ComponentFolder
 {
-        const LATEST_VERSION = 6;
+        const LATEST_VERSION = 7;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
         public function createComponent()
