@@ -154,7 +154,7 @@ class LibraryComponentFolder extends ComponentFolder
 
         protected function createPackageXmlFile()
         {
-                $this->copyFilesFromDataFolder(array('package.xml'));
+                $this->copyFileFromDataFolderWithNewName('package-xml.xml', 'package.xml');
         }
 
         protected function createDocFiles()
