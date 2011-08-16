@@ -52,7 +52,7 @@ use Phix_Project\PhixExtensions\CommandInterface;
 use Phix_Project\CommandLineLib\DefinedSwitches;
 use Phix_Project\CommandLineLib\DefinedSwitch;
 
-use Gradwell\ComponentManager\Entities\LibraryComponentFolder;
+use Phix_Project\ComponentManager\Entities\LibraryComponentFolder;
 
 class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
 {
