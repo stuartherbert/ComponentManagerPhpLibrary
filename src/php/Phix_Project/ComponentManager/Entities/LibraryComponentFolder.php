@@ -211,8 +211,8 @@ class LibraryComponentFolder extends ComponentFolder
 	{
 		$this->createFolders();
 		$this->createBuildFile();
-		$this->addOrUpdateBuildProperty('project.channel', 'pear.example.com');
-		$this->addOrUpdateBuildProperty('pear.local', '/var/www/${project.channel}');
+		$this->addBuildProperty('project.channel', 'pear.example.com');
+		$this->addBuildProperty('pear.local', '/var/www/${project.channel}');
 		$this->createDummyPhpFile();
 	}
 

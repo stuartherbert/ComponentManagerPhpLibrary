@@ -116,7 +116,7 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 }
 
                 // if we get here, we have a green light
-                $lib->upgradeComponent();
+                $lib->upgradeComponent(LibraryComponentFolder::LATEST_VERSION);
 
                 // if we get here, it worked (ie, no exception!!)
                 $so->outputLine(null, 'Upgraded php-library component in ' . $folder . ' to the latest version');
