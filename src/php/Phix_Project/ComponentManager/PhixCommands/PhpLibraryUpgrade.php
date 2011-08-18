@@ -101,12 +101,18 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                                         break;
 
                                 case LibraryComponentFolder::STATE_EMPTY:
-                                        $se->outputLine(null, "folder is not a php-library");
+                                        $se->outputLine(null, "folder is not a php-library component");
                                         $se->output(null, 'use ');
                                         $se->output($context->commandStyle, $context->argvZero . ' php-library:init');
                                         $se->outputLine(null, ' to initialise this folder');
                                         break;
 
+                                case LibraryComponentFolder::STATE_INCOMPATIBLE:
+                                        $se->output($context->errorStyle, $context->errorPrefix);
+                                        $se->outputLine(null, 'folder is not a php-library component');
+                                        break;
+                        
+                                
                                 default:
                                         $se->outputLine(null, 'I do not know what to do with this folder');
                                         break;

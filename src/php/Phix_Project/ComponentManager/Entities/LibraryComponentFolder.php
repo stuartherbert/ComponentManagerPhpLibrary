@@ -48,6 +48,7 @@ namespace Phix_Project\ComponentManager\Entities;
 
 class LibraryComponentFolder extends ComponentFolder
 {
+        const COMPONENT_TYPE = 'php-library';
         const LATEST_VERSION = 8;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 

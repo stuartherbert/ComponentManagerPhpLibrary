@@ -108,6 +108,11 @@ class PhpLibraryStatus extends ComponentCommandBase implements CommandInterface
                                 $so->outputLine(null, 'folder is empty');
                                 break;
 
+                        case LibraryComponentFolder::STATE_INCOMPATIBLE:
+                                $se->output($context->errorStyle, $context->errorPrefix);
+                                $se->outputLine(null, 'folder is not a php-library component');
+                                break;                        
+                        
                         default:
                                 $se->output($context->errorStyle, $context->errorPrefix);
                                 $se->outputLine(null, 'I do not know what to do with this folder');
