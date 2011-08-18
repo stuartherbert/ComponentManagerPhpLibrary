@@ -48,7 +48,7 @@ namespace Phix_Project\ComponentManager\Entities;
 
 class LibraryComponentFolder extends ComponentFolder
 {
-        const LATEST_VERSION = 7;
+        const LATEST_VERSION = 8;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
         public function createComponent()
@@ -57,7 +57,8 @@ class LibraryComponentFolder extends ComponentFolder
                 $this->createFolders();
 
                 // step 2: create the build file
-                $this->createBuildFile();
+		$this->createBuildFile();
+		$this->createBuildLocalFile();
                 $this->createBuildProperties();
 
                 // step 3: create the package.xml file
@@ -122,8 +123,13 @@ class LibraryComponentFolder extends ComponentFolder
 
         protected function createBuildFile()
         {
-                $this->copyFilesFromDataFolder(array('build.xml', 'build.local.xml'));
-        }
+                $this->copyFilesFromDataFolder(array('build.xml'));
+	}
+
+	protected function createBuildLocalFile()
+	{
+                $this->copyFilesFromDataFolder(array('build.local.xml'));
+	}
 
         protected function createBuildProperties()
         {
@@ -153,20 +159,6 @@ class LibraryComponentFolder extends ComponentFolder
 	protected function createDummyPhpFile()
 	{
 		$this->copyFilesFromDataFolder(array('dummy.php'), '/src/php/');
-	}
-
-	protected function addBuildProperty($key, $value)
-	{
-		$buildPropertiesFilename = $this->folder . '/build.properties';
-
-		if (!\file_exists($buildPropertiesFilename))
-		{
-			$this->createBuildProperties();
-		}
-
-		$fp = \fopen($buildPropertiesFilename, 'a+');
-		\fwrite($fp, "$key=$value\n");
-		\fclose($fp);
 	}
 
         protected function touchFile($filename)
@@ -219,8 +211,8 @@ class LibraryComponentFolder extends ComponentFolder
 	{
 		$this->createFolders();
 		$this->createBuildFile();
-		$this->addBuildProperty('project.channel', 'pear.example.com');
-		$this->addBuildProperty('pear.local', '/var/www/${project.channel}');
+		$this->addOrUpdateBuildProperty('project.channel', 'pear.example.com');
+		$this->addOrUpdateBuildProperty('pear.local', '/var/www/${project.channel}');
 		$this->createDummyPhpFile();
 	}
 
@@ -236,9 +228,17 @@ class LibraryComponentFolder extends ComponentFolder
 		$this->createBuildFile();
 	}
 
+	/**
+	 * Upgrade a php-library to v6
+	 *
+	 * The changes between v5 and v6 are:
+	 *
+	 * * support for build.local.xml
+	 */
         protected function upgradeFrom5To6()
         {
-                $this->createBuildFile();
+		$this->createBuildFile();
+		$this->createBuildLocalFile();
 	}
 
 	/**
@@ -251,5 +251,17 @@ class LibraryComponentFolder extends ComponentFolder
 	protected function upgradeFrom6To7()
 	{
 		$this->createBootstrapFile();
+	}
+
+	/**
+	 * Upgrade a php-library to v8
+	 *
+	 * The changes between v7 and v8 are:
+	 *
+	 * * new 'phing version' build.xml target
+	 */
+	protected function upgradeFrom7To8()
+	{
+		$this->createBuildFile();
 	}
 }
