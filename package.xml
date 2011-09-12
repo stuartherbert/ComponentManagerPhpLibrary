@@ -46,7 +46,7 @@ ${contents}
         <name>Autoloader</name>
         <channel>pear.phix-project.org</channel>
         <min>3.0.0</min>
-	      <max>3.999.9999</max>
+        <max>3.999.9999</max>
       </package>
       <package>
         <name>ComponentManagerShared</name>
