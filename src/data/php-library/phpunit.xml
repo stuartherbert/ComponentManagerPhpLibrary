@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<phpunit>
+    <filter>
+        <blacklist>
+            <directory suffix=".php">/path/to/files</directory>
+            <file>/path/to/file</file>
+            <exclude>
+                <directory suffix=".php">/path/to/files</directory>
+                <file>/path/to/file</file>
+            </exclude>
+        </blacklist>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php"></directory>
+            <file>/path/to/file</file>
+            <exclude>
+                <directory suffix=".php">/path/to/files</directory>
+                <file>/path/to/file</file>
+            </exclude>
+        </whitelist>
+     </filter>
+</phpunit>
+<!-- vim: set tabstop=4 shiftwidth=4 expandtab: -->
