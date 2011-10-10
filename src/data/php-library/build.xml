@@ -146,6 +146,11 @@
     <echo message="    Install this component from source for all local users" />
     <echo message="    You must be root to run this target on Linux!!" />
     <echo message=""/>
+    <echo message="Maintain your component:"/>
+    <echo message=""/>
+    <echo message="  upgrade-skeleton"/>
+    <echo message="    Upgrade the skeleton files for this component"/>
+    <echo message=""/>
     <echo message="Additional targets:" />
     <echo message=""/>
     <echo message="  clean" />
@@ -368,6 +373,11 @@
   <!-- Run additional PEAR commands in the vendor folder -->
   <target name="vendor-pear">
     <exec command="pear -c ${project.tmpdir}/pear-config ${pear.cmd}" logoutput="true" checkreturn="true" />
+  </target>
+
+  <!-- Upgrade the skeleton files here and now -->
+  <target name="upgrade-skeleton">
+    <exec command="phix ${component.type}:upgrade ." logoutput="true" checkreturn="true" />
   </target>
 
   <!-- Clean up the mess -->
