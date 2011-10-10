@@ -23,7 +23,7 @@
   </version>
   <stability>
     <release>${project.stability}</release>
-    <api>${project.stability}</api>
+    <api>stable</api>
   </stability>
   <license>New BSD license</license>
   <notes>
