@@ -290,6 +290,9 @@ class LibraryComponentFolder extends ComponentFolder
          * The changes between v9 and v10 are:
          * 
          * * support for snapshot versions of components
+         * * user-friendly checks for missing vendor/ folder
+         * * user-friendly checks for trying to install PEAR package
+         *   when it has not been built (v useful for snapshots)
          */
         protected function upgradeFrom9To10()
         {
