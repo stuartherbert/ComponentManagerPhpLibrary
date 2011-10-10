@@ -49,7 +49,7 @@ namespace Phix_Project\ComponentManager\Entities;
 class LibraryComponentFolder extends ComponentFolder
 {
         const COMPONENT_TYPE = 'php-library';
-        const LATEST_VERSION = 8;
+        const LATEST_VERSION = 9;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
         public function createComponent()
@@ -72,9 +72,9 @@ class LibraryComponentFolder extends ComponentFolder
                 // control systems
                 $this->createScmIgnoreFiles();
 
-                // step 6: don't forget the bootstrap file for
-                // the unit tests
+                // step 6: don't forget the files for the unit tests
                 $this->createBootstrapFile();
+                $this->createPhpUnitXmlFile();
 
 		// step 7: add a dummy PHP file so that an empty
 		// component can build-vendor once the metadata
@@ -161,6 +161,11 @@ class LibraryComponentFolder extends ComponentFolder
 	{
 		$this->copyFilesFromDataFolder(array('dummy.php'), '/src/php/');
 	}
+        
+        protected function createPhpUnitXmlFile()
+        {
+                $this->copyFilesFromDataFolder(array('phpunit.xml'));
+        }
 
         protected function touchFile($filename)
         {
@@ -265,4 +270,17 @@ class LibraryComponentFolder extends ComponentFolder
 	{
 		$this->createBuildFile();
 	}
+        
+        /**
+         * Upgrade a php-library to v9
+         * 
+         * The changes between v8 and v9 are:
+         * 
+         * * new 'phpunit.xml' file in the component's root folder
+         */
+        protected function upgradeFrom8To9()
+        {
+                $this->createBuildFile();
+                $this->createPhpUnitXmlFile();
+        }
 }

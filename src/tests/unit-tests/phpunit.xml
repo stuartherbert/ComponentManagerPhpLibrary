@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<phpunit>
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix="*.php">src/bin/</directory>
+            <directory suffix="*.php">src/php/</directory>
+        </whitelist>
+     </filter>
+</phpunit>
+<!-- vim: set tabstop=4 shiftwidth=4 expandtab: -->
