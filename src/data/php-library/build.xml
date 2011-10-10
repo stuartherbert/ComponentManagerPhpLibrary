@@ -286,15 +286,63 @@
 
   <!-- Install the code -->
   <target name="install-vendor">
-    <exec command="pear -c ${project.tmpdir}/pear-config install --alldeps -f ${project.tarfile}" logoutput="true" checkreturn="true"/>
+    <if>
+      <available file="${project.tarfile}"/>
+      <then>
+        <exec command="pear -c ${project.tmpdir}/pear-config install --alldeps -f ${project.tarfile}" logoutput="true" checkreturn="true"/>
+      </then>
+      <elseif>
+        <istrue value="${project.stability}"/>
+        <then>
+          <echo>Cannot find PEAR package file ${project.tarfile}</echo>
+          <echo>If your snapshot is more than 1 minute old, that is the cause</echo>
+          <echo>of this error, sorry :(</echo>
+        </then>
+      </elseif>
+      <else>
+        <echo>Cannot find PEAR package file ${project.tarfile}</echo>
+      </else>
+    </if>
   </target>
   <target name="install-system">
-    <exec command="pear install -f -a ${project.tarfile}" checkreturn="true" logoutput="true" />
+    <if>
+      <available file="${project.tarfile}"/>
+      <then>
+        <exec command="pear install -f -a ${project.tarfile}" checkreturn="true" logoutput="true" />
+      </then>
+      <elseif>
+        <istrue value="${project.stability}"/>
+        <then>
+          <echo>Cannot find PEAR package file ${project.tarfile}</echo>
+          <echo>If your snapshot is more than 1 minute old, that is the cause</echo>
+          <echo>of this error, sorry :(</echo>
+        </then>
+      </elseif>
+      <else>
+        <echo>Cannot find PEAR package file ${project.tarfile}</echo>
+      </else>
+    </if>
   </target>
 
   <!-- Publish to local copy of PEAR channel -->
   <target name="publish-local" depends="pear-package">
-    <exec command="pirum add ${pear.local} ${project.tarfile}" checkreturn="true" logoutput="true" />
+    <if>
+      <available file="${project.tarfile}"/>
+      <then>
+        <exec command="pirum add ${pear.local} ${project.tarfile}" checkreturn="true" logoutput="true" />
+      </then>
+      <elseif>
+        <istrue value="${project.stability}"/>
+        <then>
+          <echo>Cannot find PEAR package file ${project.tarfile}</echo>
+          <echo>If your snapshot is more than 1 minute old, that is the cause</echo>
+          <echo>of this error, sorry :(</echo>
+        </then>
+      </elseif>
+      <else>
+        <echo>Cannot find PEAR package file ${project.tarfile}</echo>
+      </else>
+    </if>
   </target>
 
   <!-- Run additional PEAR commands in the vendor folder -->
