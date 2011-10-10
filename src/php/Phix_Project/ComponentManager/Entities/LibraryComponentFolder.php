@@ -49,7 +49,7 @@ namespace Phix_Project\ComponentManager\Entities;
 class LibraryComponentFolder extends ComponentFolder
 {
         const COMPONENT_TYPE = 'php-library';
-        const LATEST_VERSION = 9;
+        const LATEST_VERSION = 10;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
         public function createComponent()
@@ -282,5 +282,18 @@ class LibraryComponentFolder extends ComponentFolder
         {
                 $this->createBuildFile();
                 $this->createPhpUnitXmlFile();
+        }
+        
+        /**
+         * Upgrade a php-library to v10
+         * 
+         * The changes between v9 and v10 are:
+         * 
+         * * support for snapshot versions of components
+         */
+        protected function upgradeFrom9To10()
+        {
+                $this->createBuildFile();
+		$this->addBuildProperty('project.snapshot', 'false');                
         }
 }

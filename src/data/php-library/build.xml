@@ -3,8 +3,21 @@
 <project default="help" basedir=".">
   <!-- Human-readable info about our component -->
   <property file="build.properties" />
-
-  <property name="project.version"         value="${project.majorVersion}.${project.minorVersion}.${project.patchLevel}" />
+  <php function="date" returnProperty="date.now">
+    <param value="YmdHi"/>
+  </php>
+  <if>
+    <and>
+      <isset property="project.snapshot"/>
+      <istrue value="${project.snapshot}"/>
+    </and>
+    <then>
+      <property name="project.version" value="${project.majorVersion}.${project.minorVersion}.${project.patchLevel}snapshot${date.now}" />
+    </then>
+    <else>
+      <property name="project.version" value="${project.majorVersion}.${project.minorVersion}.${project.patchLevel}" />
+    </else>
+  </if>
   <property name="project.apiversion"      value="${project.majorVersion}.${project.minorVersion}" />
 
   <!-- Paths to the directories that we work with -->
