@@ -13,9 +13,11 @@
     </and>
     <then>
       <property name="project.version" value="${project.majorVersion}.${project.minorVersion}.${project.patchLevel}snapshot${date.now}" />
+      <property name="project.stability" value="snapshot" />
     </then>
     <else>
       <property name="project.version" value="${project.majorVersion}.${project.minorVersion}.${project.patchLevel}" />
+      <property name="project.stability" value="stable" />
     </else>
   </if>
   <property name="project.apiversion"      value="${project.majorVersion}.${project.minorVersion}" />

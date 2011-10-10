@@ -18,12 +18,12 @@
   <date>${build.date}</date>
   <time>${build.time}</time>
   <version>
-  <release>${project.version}</release>
-  <api>${project.majorVersion}.${project.minorVersion}</api>
+    <release>${project.version}</release>
+    <api>${project.majorVersion}.${project.minorVersion}</api>
   </version>
   <stability>
-    <release>stable</release>
-    <api>stable</api>
+    <release>${project.stability}</release>
+    <api>${project.stability}</api>
   </stability>
   <license>New BSD license</license>
   <notes>
