@@ -354,6 +354,14 @@
     <if>
       <available file="${project.tarfile}"/>
       <then>
+        <!-- get rid of any existing snapshots we may have published -->
+        <foreach param="packagefile" absparam="abspackagefile" target="pirum-remove-package">
+          <fileset dir="${pear.local}/get">
+            <include name="${project.name}*snapshot*.tgz" />
+          </fileset>
+        </foreach>
+
+        <!-- publish the new PEAR package -->
         <exec command="pirum add ${pear.local} ${project.tarfile}" checkreturn="true" logoutput="true" />
       </then>
       <elseif>
@@ -368,6 +376,10 @@
         <echo>Cannot find PEAR package file ${project.tarfile}</echo>
       </else>
     </if>
+  </target>
+
+  <target name="pirum-remove-package">
+    <exec command="pirum remove ${pear.local} ${packagefile}" logoutput="true" checkreturn="true" />
   </target>
 
   <!-- Run additional PEAR commands in the vendor folder -->
