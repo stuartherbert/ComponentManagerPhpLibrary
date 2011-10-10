@@ -294,7 +294,7 @@ class LibraryComponentFolder extends ComponentFolder
         protected function upgradeFrom9To10()
         {
                 $this->createBuildFile();
-		$this->addBuildProperty('project.snapshot', 'false');
+		$this->addBuildProperty('project.snapshot', 'false', 'project.patchLevel');
                 
                 // edit the XML tags
                 $packageXml = $this->loadPackageXml();
