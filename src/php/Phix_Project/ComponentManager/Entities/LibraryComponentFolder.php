@@ -293,6 +293,8 @@ class LibraryComponentFolder extends ComponentFolder
          * * user-friendly checks for missing vendor/ folder
          * * user-friendly checks for trying to install PEAR package
          *   when it has not been built (v useful for snapshots)
+         * * the location of the code coverage report is now a clickable
+         *   hyperlink in terminals that detect such things
          */
         protected function upgradeFrom9To10()
         {
@@ -304,5 +306,5 @@ class LibraryComponentFolder extends ComponentFolder
                 $packageXml->version[0]->release[0] = '${project.version}';
                 $packageXml->stability[0]->release[0] = '${project.stability}';
                 $this->savePackageXml($packageXml);
-        }
+        }        
 }
