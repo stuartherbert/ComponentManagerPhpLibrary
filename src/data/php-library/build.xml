@@ -159,7 +159,7 @@
     <echo message="  version" />
     <echo message="    Show this component's version from build.properties" />
     <echo message="" />
-    <phingcall target="local-help" />
+    <phingcall target="local.help" />
   </target>
 
   <!-- Show the current version, as set in build.properties -->
