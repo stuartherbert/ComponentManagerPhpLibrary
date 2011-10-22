@@ -3,9 +3,9 @@
 <project default="help" basedir=".">
   <!-- Human-readable info about our component -->
   <property file="build.properties" />
-  <php function="date" returnProperty="date.now">
-    <param value="YmdHi"/>
-  </php>
+  <taskdef name="now" classname="Phix_Project.ComponentManager.Phing.NowTask" />
+  <now name="date.now"/>
+  <echo message="Now is ${date.now}"/>
   <if>
     <and>
       <isset property="project.snapshot"/>
@@ -58,7 +58,18 @@
   <property name="project.tarfile"         value="${project.distdir}/${project.tarfilename}" />
 
   <!-- what was the last PEAR package we created, if any? -->
-  <php expression="@file_get_contents('${project.distdir.lastBuilt}');" returnProperty="project.lastBuiltTarfile"/>
+  <if>
+    <available file="${project.distdir.lastBuilt}"/>
+    <then>
+      <property file="${project.distdir.lastBuilt}"/>
+    </then>
+    <else>
+      <property name="project.lastBuiltTarfile" value="false"/>  
+    </else>
+  </if>
+
+  <taskdef name="phingcallifexists" classname="Phix_Project.ComponentManager.Phing.PhingCallIfExistsTask" />
+  <import file="build.local.xml"/>
 
   <!-- override this if you want to run additional PEAR commands -->
   <property name="pear.cmd" value="" override="true" />
@@ -104,8 +115,6 @@
     <include name="*.txt" />
     <include name="*.md" />
   </fileset>
-
-  <taskdef name="phingcallifexists" classname="Phix_Project.ComponentManager.Phing.PhingCallIfExistsTask" />
 
   <import file="build.local.xml"/>
   
@@ -161,7 +170,7 @@
     <echo message="  version" />
     <echo message="    Show this component's version from build.properties" />
     <echo message="" />
-    <phingcallifexists target="local.help" />
+    <phingcall target="local-help" />
   </target>
 
   <!-- Show the current version, as set in build.properties -->
@@ -177,7 +186,6 @@
         <include name="**/*.php" />
       </fileset>
     </phplint>
-    <phingcallifexists target="local.lint" />
   </target>
 
   <!-- Run the unit tests for this module -->
@@ -206,19 +214,13 @@
   </target>
 
   <!-- Run all the tests for this module -->
-  <target name="test" depends="run-unittests">
-    <phingcallifexists target="local.test" />
-  </target>
+  <target name="test" depends="run-unittests" />
 
   <!-- Run the code review quality tests -->
-  <target name="code-review" depends="run-unittests, code-browser, phpcpd, pdepend">
-    <phingcallifexists target="local.code-review" />
-  </target>
+  <target name="code-review" depends="run-unittests, code-browser, phpcpd, pdepend" />
 
   <!-- Run all of the targets for setting up the code browser -->
-  <target name="code-browser" depends="phpmd, phpcs, phpcb">
-    <phingcallifexists target="local.code-browser" />
-  </target>
+  <target name="code-browser" depends="phpmd, phpcs, phpcb" />
 
   <target name="pdepend">
     <mkdir dir="${project.review.logsdir}" />
@@ -230,7 +232,6 @@
     <mkdir dir="${project.review.logsdir}" />
     <exec command="phpdoc -d ${project.src.phpdir} -t ${project.review.docsdir}" logoutput="true"/>
     <echo message="You will find the PHPDoc for your project at: ${project.review.docsdir}/index.html"/>
-    <phingcallifexists target="local.phpdoc" />
   </target>
 
   <!-- Check code for code smells -->
@@ -319,7 +320,7 @@
     </tar>
 
     <!-- write a message to say which file we built last -->
-    <echo file="${project.distdir.lastBuilt}" append="false">${project.tarfile}</echo>
+    <echo file="${project.distdir.lastBuilt}" append="false">project.lastBuiltTarfile=${project.tarfile}</echo>
     <echo>Your PEAR package is in ${project.tarfile}</echo>
   </target>
 
@@ -420,7 +421,6 @@
     <delete dir="${project.pkgdir}" />
     <delete dir="${project.distdir}" />
     <delete dir="${project.tmpdir}" />
-    <phingcallifexists target="local.clean" />
   </target>
 </project>
 <!-- vim: set tabstop=2 shiftwidth=2 expandtab: -->

@@ -3,9 +3,9 @@
 <project default="help" basedir=".">
   <!-- Human-readable info about our component -->
   <property file="build.properties" />
-  <php function="date" returnProperty="date.now">
-    <param value="YmdHi"/>
-  </php>
+  <taskdef name="now" classname="Phix_Project.ComponentManager.Phing.NowTask" />
+  <now name="date.now"/>
+  <echo message="Now is ${date.now}"/>
   <if>
     <and>
       <isset property="project.snapshot"/>
@@ -58,7 +58,18 @@
   <property name="project.tarfile"         value="${project.distdir}/${project.tarfilename}" />
 
   <!-- what was the last PEAR package we created, if any? -->
-  <php expression="@file_get_contents('${project.distdir.lastBuilt}');" returnProperty="project.lastBuiltTarfile"/>
+  <if>
+    <available file="${project.distdir.lastBuilt}"/>
+    <then>
+      <property file="${project.distdir.lastBuilt}"/>
+    </then>
+    <else>
+      <property name="project.lastBuiltTarfile" value="false"/>  
+    </else>
+  </if>
+
+  <taskdef name="phingcallifexists" classname="Phix_Project.ComponentManager.Phing.PhingCallIfExistsTask" />
+  <import file="build.local.xml"/>
 
   <!-- override this if you want to run additional PEAR commands -->
   <property name="pear.cmd" value="" override="true" />
@@ -309,7 +320,7 @@
     </tar>
 
     <!-- write a message to say which file we built last -->
-    <echo file="${project.distdir.lastBuilt}" append="false">${project.tarfile}</echo>
+    <echo file="${project.distdir.lastBuilt}" append="false">project.lastBuiltTarfile=${project.tarfile}</echo>
     <echo>Your PEAR package is in ${project.tarfile}</echo>
   </target>
 
