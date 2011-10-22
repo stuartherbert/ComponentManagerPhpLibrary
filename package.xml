@@ -51,7 +51,7 @@ ${contents}
       <package>
         <name>ComponentManagerShared</name>
         <channel>pear.phix-project.org</channel>
-        <min>2.2.0snapshot</min>
+        <min>2.2.0</min>
         <max>2.999.9999</max>
       </package>
       <package>
