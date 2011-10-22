@@ -295,6 +295,7 @@ class LibraryComponentFolder extends ComponentFolder
          *   when it has not been built (v useful for snapshots)
          * * the location of the code coverage report is now a clickable
          *   hyperlink in terminals that detect such things
+         * * support for 'local.*' targets in the build.local.xml file
          */
         protected function upgradeFrom9To10()
         {
@@ -306,5 +307,19 @@ class LibraryComponentFolder extends ComponentFolder
                 $packageXml->version[0]->release[0] = '${project.version}';
                 $packageXml->stability[0]->release[0] = '${project.stability}';
                 $this->savePackageXml($packageXml);
+                
+                // rename the targets in old build.local.xml files
+                $regex = array();
+                $replace = array();
+                
+                // the project in build.local.xml gets a name
+                $regex[] = '|project default="local-help"|';
+                $replace[] = 'project name="local" default="help"';
+                
+                // the help target in build.local.xml gets renamed
+                $regex[] = '|target name="local-help"|';
+                $replace[] = 'target name="help"';
+                
+                $this->regexFile('build.local.xml', $regex, $replace);
         }        
 }
