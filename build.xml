@@ -209,7 +209,7 @@
     <mkdir dir="${project.review.logsdir}" />
     <exec command="phpunit --configuration=phpunit.xml ${project.src.testunitdir}" checkreturn="true" logoutput="true"/>
     <echo/>
-    <echo>The code coverage report is in ${project.review.codecoveragedir}</echo>
+    <echo>The code coverage report is in file://${project.review.codecoveragedir}</echo>
     <echo/>
   </target>
 
