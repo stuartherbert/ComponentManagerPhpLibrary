@@ -49,7 +49,7 @@ namespace Phix_Project\ComponentManager\Entities;
 class LibraryComponentFolder extends ComponentFolder
 {
         const COMPONENT_TYPE = 'php-library';
-        const LATEST_VERSION = 10;
+        const LATEST_VERSION = 11;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
         public function createComponent()
@@ -80,6 +80,9 @@ class LibraryComponentFolder extends ComponentFolder
 		// component can build-vendor once the metadata
 		// has been edited
 		$this->createDummyPhpFile();
+                
+                // step 8: add the README file into the src folder
+                $this->createSrcReadmeFile();
 
                 // if we get here, job done
         }
@@ -165,6 +168,11 @@ class LibraryComponentFolder extends ComponentFolder
         protected function createPhpUnitXmlFile()
         {
                 $this->copyFilesFromDataFolder(array('phpunit.xml'));
+        }
+        
+        protected function createSrcReadmeFile()
+        {
+                $this->copyFilesFromDataFolder(array('src/README.md'), '/src');
         }
 
         protected function touchFile($filename)
@@ -321,5 +329,16 @@ class LibraryComponentFolder extends ComponentFolder
                 $replace[] = 'target name="help"';
                 
                 $this->regexFile('build.local.xml', $regex, $replace);
-        }        
+        }
+        
+        /**
+         * The changes between v10 and v11 are:
+         * 
+         * * new src/README.md file, explaining what each of the folders
+         *   in the src/ folder are for
+         */
+        protected function upgradeFrom10To11()
+        {
+                $this->createSrcReadmeFile();
+        }
 }
