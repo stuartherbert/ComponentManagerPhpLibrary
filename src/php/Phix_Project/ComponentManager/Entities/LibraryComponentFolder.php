@@ -172,7 +172,7 @@ class LibraryComponentFolder extends ComponentFolder
         
         protected function createSrcReadmeFile()
         {
-                $this->copyFilesFromDataFolder(array('src/README.md'), '/src/');
+                $this->copyFilesFromDataFolder(array('src/README.txt'), '/src/');
         }
 
         protected function touchFile($filename)
