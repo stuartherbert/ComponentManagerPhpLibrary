@@ -139,6 +139,8 @@
     <echo message="      Run code quality tests for PHP_CodeBrowser" />
     <echo message="    phpcpd" />
     <echo message="      Check for cut and paste problems" />
+    <echo message="    phploc" />
+    <echo message="      Calculate the size of your PHP project" />
     <echo message="    phpdoc" />
     <echo message="      Create the PHP docs from source code" />
     <echo message="" />
@@ -217,7 +219,7 @@
   </target>
 
   <!-- Run the code review quality tests -->
-  <target name="code-review" depends="run-unittests, code-browser, phpcpd, pdepend">
+  <target name="code-review" depends="run-unittests, code-browser, phpcpd, pdepend, phploc">
     <phingcallifexists target="local.code-review"/>
   </target>
 
@@ -261,6 +263,12 @@
     <delete dir="${project.review.codebrowserdir}" />
     <mkdir dir="${project.review.codebrowserdir}" />
     <exec command="phpcb --log ${project.review.logsdir} --source ${project.src.phpdir} --output ${project.review.codebrowserdir}" logoutput="true" />
+  </target>
+
+  <!-- Work out the size of the project -->
+  <target name="phploc">
+    <mkdir dir="${project.review.logsdir}" />
+    <exec command="phploc --log-xml ${project.review.logsdir}/phploc.xml --log-csv ${project.review.logsdir}/phploc.csv ${project.src.phpdir}" logoutput="true" />
   </target>
 
   <!-- Populate vendor with the dependencies for this component -->
