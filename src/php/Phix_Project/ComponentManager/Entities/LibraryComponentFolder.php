@@ -167,7 +167,7 @@ class LibraryComponentFolder extends ComponentFolder
         
         protected function createPhpUnitXmlFile()
         {
-                $this->copyFilesFromDataFolder(array('phpunit.xml'));
+                $this->copyFilesFromDataFolder(array('phpunit.xml.dist'));
         }
         
         protected function createSrcReadmeFile()
@@ -336,9 +336,21 @@ class LibraryComponentFolder extends ComponentFolder
          * 
          * * new src/README.md file, explaining what each of the folders
          *   in the src/ folder are for
+         * * phpunit.xml becomes phpunit.xml.dist
          */
         protected function upgradeFrom10To11()
         {
                 $this->createSrcReadmeFile();
+                if (!$this->renameOrReplaceFileFromDataFolder('phpunit.xml.dist', 'phpunit.xml', '32eeecfcb95eb236a6f152b83df2a97c'))
+                {
+                        // unable to rename phpunit.xml
+                        //
+                        // we assume this is because it has been modified
+                        // by the local user
+                        //
+                        // we will respect this, and drop our new version
+                        // into place alongside their file
+                        $this->copyFilesFromDataFolder(array('phpunit.xml.dist'));
+                }
         }
 }
