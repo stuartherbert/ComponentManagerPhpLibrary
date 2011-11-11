@@ -49,8 +49,10 @@ namespace Phix_Project\ComponentManager\PhixCommands;
 use Phix_Project\Phix\CommandsList;
 use Phix_Project\Phix\Context;
 use Phix_Project\PhixExtensions\CommandInterface;
+use Phix_Project\CommandLineLib\CommandLineParser;
 use Phix_Project\CommandLineLib\DefinedSwitches;
 use Phix_Project\CommandLineLib\DefinedSwitch;
+use Phix_Project\ValidationLib\MustBePearFileRole;
 
 use Phix_Project\ComponentManager\Entities\LibraryComponentFolder;
 
@@ -66,6 +68,19 @@ class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
                 return 'initialise the directory structure of a php-library component';
         }
 
+        public function getCommandOptions()
+        {
+                $switches = new DefinedSwitches();
+
+                $switches->addSwitch('subset', 'only create a subset of the src/ folders')
+                         ->setWithLongSwitch('subset')
+                         ->setWithRequiredArg('<role>[,<role> ...]', 'a comma-separated list of the file roles to support')
+                         ->setArgValidator(new MustBePearFileRole())
+                         ->setArgHasDefaultValueOf('bin,data,doc,php,test,www');
+
+                return $switches;
+        }
+
         public function  getCommandArgs()
         {
                 return array
@@ -78,6 +93,33 @@ class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
         {
                 $so = $context->stdout;
                 $se = $context->stderr;
+
+                // parse the switch(es)
+                $options = $this->getCommandOptions();
+                $parser  = new CommandLineParser();
+                list($parsedSwitches, $argsIndex) = $parser->parseSwitches($args, $argsIndex, $options);
+
+                // check for errors
+                $errors = $parsedSwitches->validateSwitchValues();
+                if (count($errors) > 0)
+                {
+                        // validation failed
+                        foreach ($errors as $errorMsg)
+                        {
+                                $se->output($context->errorStyle, $context->errorPrefix);
+                                $se->outputLine(null, $errorMsg);
+                        }
+
+                        // return the error code to the caller
+                        return 1;
+                }
+
+                // build the list of roles to support
+                //
+                // we know that the string exists, and that it contains
+                // one or more valid roles
+                $subsetString = $parsedSwitches->getFirstArgForSwitch('subset');
+                $subsetRoles  = explode(',', $subsetString);
 
                 // do we have a folder to init?
                 $errorCode = $this->validateFolder($args, $argsIndex, $context);
@@ -116,7 +158,7 @@ class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
                 }
 
                 // if we get here, we have a green light
-                $lib->createComponent();
+                $lib->createComponent($subsetRoles);
 
                 // if we get here, it worked (ie, no exception!!)
                 $so->outputLine(null, 'Initialised empty php-library component in ' . $folder);

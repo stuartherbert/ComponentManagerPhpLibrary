@@ -17,7 +17,7 @@
  *     the documentation and/or other materials provided with the
  *     distribution.
  *
- *   * Neither the names of the copyright holders nor the names of the 
+ *   * Neither the names of the copyright holders nor the names of the
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -46,20 +46,39 @@
 
 namespace Phix_Project\ComponentManager\Entities;
 
+use Phix_Project\Phix\Context;
+use Phix_Project\ContractLib\Contract;
+
 class LibraryComponentFolder extends ComponentFolder
 {
         const COMPONENT_TYPE = 'php-library';
         const LATEST_VERSION = 11;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
-        public function createComponent()
+        protected $activeRoles = array();
+
+        public function __construct($folder)
         {
+                parent::__construct($folder);
+                $this->activeRoles = $this->determineActiveRoles();
+        }
+
+
+        public function createComponent($subsetRoles)
+        {
+                // step 0: catch silly programmer errors
+                Contract::Preconditions(function() use ($subsetRoles)
+                {
+                        Contract::RequiresValue($subsetRoles, is_array($subsetRoles), '$subsetRoles must be an array');
+                        Contract::RequiresValue($subsetRoles, count($subsetRoles) > 0, '$subsetRoles cannot be an empty array');
+                });
+
                 // step 1: create the folders required
-                $this->createFolders();
+                $this->createFolders($subsetRoles);
 
                 // step 2: create the build file
-		$this->createBuildFile();
-		$this->createBuildLocalFile();
+                $this->createBuildFile();
+                $this->createBuildLocalFile();
                 $this->createBuildProperties();
 
                 // step 3: create the package.xml file
@@ -76,36 +95,145 @@ class LibraryComponentFolder extends ComponentFolder
                 $this->createBootstrapFile();
                 $this->createPhpUnitXmlFile();
 
-		// step 7: add a dummy PHP file so that an empty
-		// component can build-vendor once the metadata
-		// has been edited
-		$this->createDummyPhpFile();
-                
+                // step 7: add a dummy PHP file so that an empty
+                // component can build-vendor once the metadata
+                // has been edited
+                $this->createDummyPhpFile();
+
                 // step 8: add the README file into the src folder
                 $this->createSrcReadmeFile();
 
                 // if we get here, job done
         }
 
-        protected function createFolders()
+        public function addRoles($roles)
         {
-                $foldersToMake = array
+                $this->createFolders($roles);
+
+                // role-specific actions that we now need to do
+                if (in_array($roles, 'test'))
+                {
+                        $this->createBootstrapFile();
+                        $this->createPhpUnitXmlFile();
+                }
+        }
+
+        public function removeUnusedRoles(Context $context, $dryRun = true)
+        {
+                $so = $context->stdout;
+                $roles = $this->determineUnusedRoles();
+
+                // did we find any roles to remove?
+                if (count($roles) == 0)
+                {
+                        $so->outputLine(null, "No unused roles found");
+                        return 0;
+                }
+
+                // are we doing a dry run?
+                if ($dryRun)
+                {
+                        $so->outputLine(null, "Attempting dry-run ...");
+                        foreach ($roles as $role => $folders)
+                        {
+                                $so->outputLine(null, "Detected unused PEAR-Installer file role '$role'");
+                                foreach ($folders as $folder)
+                                {
+                                        $so->outputLine(null, "- Would remove folder '$folder'");
+                                }
+                        }
+                        $so->outputLine(null, "Dry-run complete.");
+                        return 0;
+                }
+
+                // if we get here, then we are removing the folders!
+                foreach ($roles as $role => $folders)
+                {
+                        $so->outputLine(null, "Detected unused PEAR-Installer file role '$role' ... removing");
+                        $this->removeFolders($folders);
+                }
+
+                $so->outputLine(null, "Done.");
+                return 0;
+        }
+
+        protected function createFolders($subsetRoles)
+        {
+                $foldersByRole = array
                 (
-                        'src',
-                        'src/php',
-                        'src/bin',
-                        'src/data',
-                        'src/www',
-			'src/docs',
-                        'src/tests',
-                        'src/tests/unit-tests',
-                        'src/tests/unit-tests/bin',
-                        'src/tests/unit-tests/php',
-                        'src/tests/unit-tests/www',
-                        'src/tests/integration-tests',
-                        'src/tests/functional-tests',
+                        'bin'  => array(
+                            'src',
+                            'src/bin',
+                        ),
+                        'data' => array(
+                            'src',
+                            'src/data'
+                        ),
+                        'doc'  => array(
+                            'src',
+                            'src/docs'
+                        ),
+                        'php'  => array(
+                            'src',
+                            'src/php',
+                        ),
+                        'test' => array(
+                            'src',
+                            'src/tests',
+                            'src/tests/unit-tests',
+                            'src/tests/integration-tests',
+                            'src/tests/functional-tests',
+                        ),
+                        'www'  => array(
+                            'src',
+                            'src/www',
+                        )
                 );
 
+                $foldersToMake = array();
+                foreach ($subsetRoles as $role)
+                {
+                        foreach($foldersByRole[$role] as $folder)
+                        {
+                                $foldersToMake[] = $folder;
+                        }
+                }
+
+                // ha! you didn't think it was quite that easy, did you?
+                // if the 'test' role is enabled, we need to go and add
+                // in the folders for tests for the others
+
+                if (in_array('test', $subsetRoles))
+                {
+                        $testFoldersByRole = array
+                        (
+                                'bin' => array (
+                                        'src/tests/unit-tests/bin',
+                                ),
+                                'php' => array (
+                                        'src/tests/unit-tests/php',
+                                ),
+                                'www' => array (
+                                        'src/tests/unit-tests/www'
+                                ),
+                        );
+
+                        foreach ($subsetRoles as $role)
+                        {
+                                if (!isset($testFoldersByRole[$role]))
+                                {
+                                        continue;
+                                }
+
+                                foreach ($testFoldersByRole[$role] as $folder)
+                                {
+                                        $foldersToMake[] = $folder;
+                                }
+                        }
+                }
+
+                // at this point, $foldersToMake contains a list of the
+                // folders that we want to create
                 foreach ($foldersToMake as $folderToMake)
                 {
                         $folder = $this->folder . '/' . $folderToMake;
@@ -120,20 +248,187 @@ class LibraryComponentFolder extends ComponentFolder
                                         throw new \Exception('unable to create folder ' . $this->folder . '/' . $folderToMake);
                                 }
                         }
-                        
+
                         $this->touchFile($folderToMake . '/.empty');
                 }
+
+                // now, we need to check again to see which roles are active
+                $this->determineActiveRoles();
+        }
+
+        protected function determineActiveRoles()
+        {
+                $foldersForRoles = array (
+                        'bin'  => 'src/bin',
+                        'data' => 'src/data',
+                        'doc'  => 'src/doc',
+                        'php'  => 'src/php',
+                        'test' => 'src/tests',
+                        'www'  => 'src/www'
+                );
+
+                $activeRoles = array();
+                foreach ($foldersForRoles as $role => $folder)
+                {
+                        if (is_dir($this->folder . '/' . $folder))
+                        {
+                                $activeRoles[$role] = true;
+                        }
+                }
+
+                return $activeRoles;
+        }
+
+        protected function testHasActiveRole($role)
+        {
+                return isset($this->activeRoles[$role]);
+        }
+
+        /**
+         * Determine which PEAR-Installer roles are definitely not being used
+         * in this component, so that they can be removed
+         *
+         * The basic idea is to peek inside every 'active' role, and see if
+         * there are any user-created files in there.  If not, the role is not
+         * currently being used, and can be dropped!
+         *
+         * @return array
+         *         List of roles to remove, and the folders to remove
+         *         per role
+         */
+        protected function determineUnusedRoles()
+        {
+                $unusedRoles = array();
+
+                // where do we need to look, to see whether a role is
+                // currently being used or not?
+                $foldersToCheck = array
+                (
+                        'bin' => array(
+                                'src/bin',
+                                'src/tests/unit-tests/bin'
+                        ),
+                        'data' => array('src/data'),
+                        'doc' => array('src/doc'),
+                        'php' => array(
+                                'src/php',
+                                'src/tests/unit-tests/php',
+                        ),
+                        'test' => array(
+                                'src/tests/functional-tests',
+                                'src/tests/integration-tests',
+                                'src/tests/unit-tests/',
+                        ),
+                        'www' => array (
+                                'src/www',
+                                'src/tests/unit-tests/www'
+                        )
+                );
+
+                // what do we need to remove for each role that is unused?
+                //
+                // this is *almost* the same list that we check for an
+                // active role
+                $foldersToRemove = $foldersToCheck;
+                $foldersToRemove['test'][] = 'src/tests';
+
+                foreach ($this->activeRoles as $role => $isActive)
+                {
+                        $usedFolders = count($foldersToCheck[$role]);
+                        foreach ($foldersToCheck[$role] as $folder)
+                        {
+                                if ($this->determineIsUnusedFolder($this->folder . '/' . $folder))
+                                {
+                                        $usedFolders--;
+                                }
+                        }
+
+                        if ($usedFolders == 0)
+                        {
+                                $unusedRoles[$role] = $foldersToRemove[$role];
+                        }
+                }
+
+                return $unusedRoles;
+        }
+
+        /**
+         * Work out if a folder is unused, and can safely be removed
+         *
+         * This is here to help us work out which PEAR-Installer roles
+         * are not being used in this component, so that we can delete
+         * empty folders that might be annoying some users.
+         *
+         * We try to do this in the most paranoid way possible, because
+         * we never ever want to delete a user's real work!
+         *
+         * @param  string $folder
+         *         The full path to the folder to examine
+         * @return boolean
+         *         true if the folder can be safely removed, false otherwise
+         */
+        protected function determineIsUnusedFolder($folder)
+        {
+                // step 1: does the folder exist?
+                if (!is_dir($folder))
+                {
+                        return true;
+                }
+
+                // step 2: is the folder empty?
+                $empty = true;
+                $dh = opendir($folder);
+                while (($entry = readdir($dh)) !== false)
+                {
+                        // ignore standard contents
+                        if ($entry == '.')
+                        {
+                                continue;
+                        }
+
+                        if ($entry == '..')
+                        {
+                                continue;
+                        }
+
+                        // ignore our dummy files
+                        if ($entry == '.empty')
+                        {
+                                continue;
+                        }
+
+                        if ($entry == 'dummy.php')
+                        {
+                                continue;
+                        }
+
+                        // if we get here, then we have to assume that
+                        // the user is actually using the folder
+                        $empty = false;
+                }
+
+                if (!$empty)
+                {
+                        return false;
+                }
+
+                // add additional steps here
+
+                // all done
+                // if we get here, then we assume that the folder is
+                // unused
+                return true;
         }
 
         protected function createBuildFile()
         {
                 $this->copyFilesFromDataFolder(array('build.xml'));
-	}
+        }
 
-	protected function createBuildLocalFile()
-	{
+        protected function createBuildLocalFile()
+        {
                 $this->copyFilesFromDataFolder(array('build.local.xml'));
-	}
+        }
 
         protected function createBuildProperties()
         {
@@ -157,19 +452,40 @@ class LibraryComponentFolder extends ComponentFolder
 
         protected function createBootstrapFile()
         {
+                // we do not install or upgrade this file if this component
+                // does not include the 'test' role
+                if (!$this->testHasActiveRole('test'))
+                {
+                        return;
+                }
+
                 $this->copyFilesFromDataFolder(array('bootstrap.php'), '/src/tests/unit-tests/');
         }
 
 	protected function createDummyPhpFile()
 	{
-		$this->copyFilesFromDataFolder(array('dummy.php'), '/src/php/');
+               // we do not install this dummy file if this component does not
+               // include the 'php' role
+               if (!$this->testHasActiveRole('php'))
+               {
+                       return;
+               }
+
+	       $this->copyFilesFromDataFolder(array('dummy.php'), '/src/php/');
 	}
-        
+
         protected function createPhpUnitXmlFile()
         {
+                // we do not install the phpunit.xml file if this component
+                // does not have the 'test' role
+                if (!$this->testHasActiveRole('test'))
+                {
+                        return;
+                }
+
                 $this->copyFilesFromDataFolder(array('phpunit.xml.dist'));
         }
-        
+
         protected function createSrcReadmeFile()
         {
                 $this->copyFilesFromDataFolder(array('src/README.txt'), '/src/');
@@ -213,7 +529,7 @@ class LibraryComponentFolder extends ComponentFolder
 
 	/**
 	 * Upgrade a php-library to v4
-	 * 
+	 *
 	 * The changes between v3 and v4 are:
 	 *
 	 * * improved build file
@@ -278,12 +594,12 @@ class LibraryComponentFolder extends ComponentFolder
 	{
 		$this->createBuildFile();
 	}
-        
+
         /**
          * Upgrade a php-library to v9
-         * 
+         *
          * The changes between v8 and v9 are:
-         * 
+         *
          * * new 'phpunit.xml' file in the component's root folder
          */
         protected function upgradeFrom8To9()
@@ -291,12 +607,12 @@ class LibraryComponentFolder extends ComponentFolder
                 $this->createBuildFile();
                 $this->createPhpUnitXmlFile();
         }
-        
+
         /**
          * Upgrade a php-library to v10
-         * 
+         *
          * The changes between v9 and v10 are:
-         * 
+         *
          * * support for snapshot versions of components
          * * user-friendly checks for missing vendor/ folder
          * * user-friendly checks for trying to install PEAR package
@@ -309,31 +625,31 @@ class LibraryComponentFolder extends ComponentFolder
         {
                 $this->createBuildFile();
 		$this->addBuildProperty('project.snapshot', 'false', 'project.patchLevel');
-                
+
                 // edit the XML tags
                 $packageXml = $this->loadPackageXml();
                 $packageXml->version[0]->release[0] = '${project.version}';
                 $packageXml->stability[0]->release[0] = '${project.stability}';
                 $this->savePackageXml($packageXml);
-                
+
                 // rename the targets in old build.local.xml files
                 $regex = array();
                 $replace = array();
-                
+
                 // the project in build.local.xml gets a name
                 $regex[] = '|project default="local-help"|';
                 $replace[] = 'project name="local" default="help"';
-                
+
                 // the help target in build.local.xml gets renamed
                 $regex[] = '|target name="local-help"|';
                 $replace[] = 'target name="help"';
-                
+
                 $this->regexFile('build.local.xml', $regex, $replace);
         }
-        
+
         /**
          * The changes between v10 and v11 are:
-         * 
+         *
          * * new src/README.md file, explaining what each of the folders
          *   in the src/ folder are for
          * * phpunit.xml becomes phpunit.xml.dist

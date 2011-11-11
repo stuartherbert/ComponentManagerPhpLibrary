@@ -54,6 +54,7 @@ use Phix_Project\CommandLineLib\DefinedSwitches;
 use Phix_Project\CommandLineLib\DefinedSwitch;
 use Phix_Project\ComponentManager\Entities\LibraryComponentFolder;
 use Phix_Project\ValidationLib\MustBeIntegerInRange;
+use Phix_Project\ValidationLib\MustBeValidPEARFileRole;
 
 class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
 {
@@ -70,15 +71,21 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
         public function getCommandOptions()
         {
                 $switches = new DefinedSwitches();
-                
+
                 $switches->addSwitch('from', 'upgrade from a given component.version, ignoring what build.properties file says')
                          ->setWithLongSwitch('from')
                          ->setWithRequiredArg('<version>', 'the component.version to upgade from')
                          ->setArgValidator(new MustBeIntegerInRange(1, LibraryComponentFolder::LATEST_VERSION - 1));
-                
+
+                $switches->addSwitch('subset', 'only create a subset of the src/ folders')
+                         ->setWithLongSwitch('subset')
+                         ->setWithRequiredArg('<role>[,<role> ...]', 'a comma-separated list of the file roles to support')
+                         ->setArgValidator(new MustBeValidPEARFileRole())
+                         ->setArgHasDefaultValueOf('bin,data,php,tests,www');
+
                 return $switches;
         }
-        
+
         public function getCommandArgs()
         {
                 return array
@@ -120,7 +127,7 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 {
                         $upgradeFrom = $parsedSwitches->getFirstArgForSwitch('from');
                 }
-                
+
                 // do we have a folder to init?
                 $errorCode = $this->validateFolder($args, $argsIndex, $context);
                 if ($errorCode !== null)
@@ -130,7 +137,7 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 $folder = $args[$argsIndex];
 
                 // has the folder already been initialised?
-                $lib = new LibraryComponentFolder($folder);                
+                $lib = new LibraryComponentFolder($folder);
                 if ($lib->state != LibraryComponentFolder::STATE_NEEDSUPGRADE)
                 {
                         // what do we need to tell the user to do?
@@ -158,8 +165,8 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                                         $se->output($context->errorStyle, $context->errorPrefix);
                                         $se->outputLine(null, 'folder is not a php-library component');
                                         return 1;
-                        
-                                
+
+
                                 default:
                                         $se->output($context->errorStyle, $context->errorPrefix);
                                         $se->outputLine(null, 'I do not know what to do with this folder');
