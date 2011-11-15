@@ -64,11 +64,23 @@ class PhpLibraryRemoveUnusedRoles extends ComponentCommandBase implements Comman
                 return 'remove the folders for all unused PEAR-Installer file roles from this component';
         }
 
+        public function getCommandOptions()
+        {
+                $switches = new DefinedSwitches();
+
+                $switches->addSwitch('dryrun', 'list the roles and folders that would be removed if you ran the command without this switch')
+                         ->setWithShortSwitch('p')
+                         ->setWithLongSwitch('dryrun')
+                         ->setWithLongSwitch('pretend');
+
+                return $switches;
+        }
+
         public function getCommandArgs()
         {
                 return array
                 (
-                        '[<folder>]'            => '<folder> is the path to your PHP component',
+                        '[<folder>]' => '<folder> is the path to your PHP component',
                 );
         }
 
@@ -76,6 +88,19 @@ class PhpLibraryRemoveUnusedRoles extends ComponentCommandBase implements Comman
         {
                 $so = $context->stdout;
                 $se = $context->stderr;
+
+                // parse the switch(es)
+                list ($return, $parsedSwitches) = $this->parseSwitches($args, $argsIndex);
+                if ($return !== 0)
+                {
+                        // something went wrong ... bail
+                        return $return;
+                }
+                $dryRun = false;
+                if ($parsedSwitches->testHasSwitch('dryrun'))
+                {
+                        $dryRun = true;
+                }
 
                 // do we have a folder to strip?
                 $errorCode = $this->validateFolder($args, $argsIndex, $context);
@@ -115,6 +140,6 @@ class PhpLibraryRemoveUnusedRoles extends ComponentCommandBase implements Comman
                 }
 
                 // if we get here, we have a green light
-                $lib->removeUnusedRoles($context);
+                $lib->removeUnusedRoles($context, $dryRun);
         }
 }

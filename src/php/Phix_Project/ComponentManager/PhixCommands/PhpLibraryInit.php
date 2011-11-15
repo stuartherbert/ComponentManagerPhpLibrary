@@ -49,7 +49,6 @@ namespace Phix_Project\ComponentManager\PhixCommands;
 use Phix_Project\Phix\CommandsList;
 use Phix_Project\Phix\Context;
 use Phix_Project\PhixExtensions\CommandInterface;
-use Phix_Project\CommandLineLib\CommandLineParser;
 use Phix_Project\CommandLineLib\DefinedSwitches;
 use Phix_Project\CommandLineLib\DefinedSwitch;
 use Phix_Project\ValidationLib\MustBePearFileRole;
@@ -95,23 +94,11 @@ class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
                 $se = $context->stderr;
 
                 // parse the switch(es)
-                $options = $this->getCommandOptions();
-                $parser  = new CommandLineParser();
-                list($parsedSwitches, $argsIndex) = $parser->parseSwitches($args, $argsIndex, $options);
-
-                // check for errors
-                $errors = $parsedSwitches->validateSwitchValues();
-                if (count($errors) > 0)
+                list ($return, $parsedSwitches) = $this->parseSwitches($args, $argsIndex);
+                if ($return !== 0)
                 {
-                        // validation failed
-                        foreach ($errors as $errorMsg)
-                        {
-                                $se->output($context->errorStyle, $context->errorPrefix);
-                                $se->outputLine(null, $errorMsg);
-                        }
-
-                        // return the error code to the caller
-                        return 1;
+                        // something went wrong ... bail
+                        return $return;
                 }
 
                 // build the list of roles to support

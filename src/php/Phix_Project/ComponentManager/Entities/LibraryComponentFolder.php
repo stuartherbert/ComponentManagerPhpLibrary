@@ -261,7 +261,7 @@ class LibraryComponentFolder extends ComponentFolder
                 $foldersForRoles = array (
                         'bin'  => 'src/bin',
                         'data' => 'src/data',
-                        'doc'  => 'src/doc',
+                        'doc'  => 'src/docs',
                         'php'  => 'src/php',
                         'test' => 'src/tests',
                         'www'  => 'src/www'
@@ -305,47 +305,108 @@ class LibraryComponentFolder extends ComponentFolder
                 $foldersToCheck = array
                 (
                         'bin' => array(
-                                'src/bin',
-                                'src/tests/unit-tests/bin'
+                                'folders' => array (
+                                        'src/bin',
+                                        'src/tests/unit-tests/bin'
+                                ),
+                                'testFoldersToRemove' => array (
+                                        'bin',
+                                ),
                         ),
-                        'data' => array('src/data'),
-                        'doc' => array('src/doc'),
+                        'data' => array(
+                                'folders' => array(
+                                        'src/data'
+                                ),
+                                'testFoldersToRemove' => array (
+                                        'data',
+                                ),
+                        ),
+                        'doc' => array(
+                                'folders' => array(
+                                        'src/docs'
+                                ),
+                        ),
                         'php' => array(
-                                'src/php',
-                                'src/tests/unit-tests/php',
-                        ),
-                        'test' => array(
-                                'src/tests/functional-tests',
-                                'src/tests/integration-tests',
-                                'src/tests/unit-tests/',
+                                'folders' => array (
+                                        'src/php',
+                                        'src/tests/unit-tests/php',
+                                ),
+                                'testFoldersToRemove' => array (
+                                        'php',
+                                ),
                         ),
                         'www' => array (
-                                'src/www',
-                                'src/tests/unit-tests/www'
-                        )
+                                'folders' => array (
+                                        'src/www',
+                                        'src/tests/unit-tests/www'
+                                ),
+                                'testFoldersToRemove' => array (
+                                        'www'
+                                ),
+                        ),
+                        'test' => array(
+                                'folders' => array (
+                                        'src/tests/functional-tests',
+                                        'src/tests/integration-tests',
+                                        'src/tests/unit-tests/',
+                                ),
+                                'filesWeCanDelete' => array (
+                                        'bootstrap.php',
+                                        'functional-tests',
+                                        'integration-tests',
+                                        'unit-tests',
+                                        '.empty',
+                                        'dummy.php'
+                                ),
+                        ),
                 );
 
                 // what do we need to remove for each role that is unused?
                 //
                 // this is *almost* the same list that we check for an
-                // active role
-                $foldersToRemove = $foldersToCheck;
-                $foldersToRemove['test'][] = 'src/tests';
+                // active role ... but not quite
 
-                foreach ($this->activeRoles as $role => $isActive)
+                $foldersToRemove = $foldersToCheck;
+                $foldersToRemove['test']['folders'][] = 'src/tests';
+
+                foreach ($foldersToCheck as $role => $folders)
                 {
-                        $usedFolders = count($foldersToCheck[$role]);
-                        foreach ($foldersToCheck[$role] as $folder)
+                        // are all the folders for this role unused?
+                        $usedFolders = count($foldersToCheck[$role]['folders']);
+                        foreach ($foldersToCheck[$role]['folders'] as $folder)
                         {
-                                if ($this->determineIsUnusedFolder($this->folder . '/' . $folder))
+                                $filesWeCanDelete = array();
+                                if (isset($foldersToCheck[$role]['filesWeCanDelete']))
                                 {
+                                        $filesWeCanDelete = $foldersToCheck[$role]['filesWeCanDelete'];
+                                }
+
+                                // var_dump('>> looking at folder ' . $folder);
+                                // var_dump($filesWeCanDelete);
+
+                                if ($this->determineIsUnusedFolder($this->folder . '/' . $folder, $filesWeCanDelete))
+                                {
+                                        // var_dump('>> folder is unused');
                                         $usedFolders--;
                                 }
                         }
 
+                        // we've looked inside all of the folders for this
+                        // role
+                        //
+                        // are there any used folders at all?
                         if ($usedFolders == 0)
                         {
-                                $unusedRoles[$role] = $foldersToRemove[$role];
+                                // no ... we can safely remove this role
+                                $unusedRoles[$role] = $foldersToRemove[$role]['folders'];
+
+                                // special case ... we need to update the
+                                // 'test' role to say that we can get rid
+                                // of any test folders for this role too
+                                if (isset($foldersToCheck[$role]['testFoldersToRemove']))
+                                {
+                                        $foldersToCheck['test']['filesWeCanDelete'] = array_merge($foldersToCheck['test']['filesWeCanDelete'], $foldersToCheck[$role]['testFoldersToRemove']);
+                                }
                         }
                 }
 
@@ -367,8 +428,24 @@ class LibraryComponentFolder extends ComponentFolder
          * @return boolean
          *         true if the folder can be safely removed, false otherwise
          */
-        protected function determineIsUnusedFolder($folder)
+        protected function determineIsUnusedFolder($folder, $filesWeCanDelete = array())
         {
+                // step 0: catch silly programmer errors
+                Contract::Preconditions(function() use ($filesWeCanDelete)
+                {
+                        Contract::RequireValue($filesWeCanDelete, is_array($filesWeCanDelete), '$filesWeCanDelete must be an array');
+                });
+
+                // step 1: has the user given us any files to ignore?
+                if (count($filesWeCanDelete) == 0)
+                {
+                        $filesWeCanDelete = array
+                        (
+                                '.empty',
+                                'dummy.php'
+                        );
+                }
+
                 // step 1: does the folder exist?
                 if (!is_dir($folder))
                 {
@@ -392,12 +469,7 @@ class LibraryComponentFolder extends ComponentFolder
                         }
 
                         // ignore our dummy files
-                        if ($entry == '.empty')
-                        {
-                                continue;
-                        }
-
-                        if ($entry == 'dummy.php')
+                        if (in_array($entry, $filesWeCanDelete))
                         {
                                 continue;
                         }
