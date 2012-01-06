@@ -63,7 +63,7 @@
       <property file="${project.distdir.lastBuilt}"/>
     </then>
     <else>
-      <property name="project.lastBuiltTarfile" value="false"/>  
+      <property name="project.lastBuiltTarfile" value="false"/>
     </else>
   </if>
 
@@ -114,7 +114,7 @@
 
   <taskdef name="phingcallifexists" classname="Phix_Project.ComponentManager.Phing.PhingCallIfExistsTask" />
   <import file="build.local.xml"/>
-  
+
   <!-- Tell the user what this build file supports -->
   <target name="help">
     <echo message="${project.name} ${project.version}: build.xml targets:" />
@@ -306,13 +306,55 @@
     <echo>Building release directory</echo>
     <delete dir="${project.builddir}" />
     <mkdir dir="${project.pkgdir}" />
+    <if>
+      <available file="${project.src.bindir}"/>
+      <then>
+        <copy todir="${project.pkgdir}">
+          <fileset refid="binfiles"/>
+        </copy>
+      </then>
+    </if>
+    <if>
+      <available file="${project.src.datadir}"/>
+      <then>
+        <copy todir="${project.pkgdir}">
+          <fileset refid="datafiles"/>
+        </copy>
+      </then>
+    </if>
+    <if>
+      <available file="${project.src.docdir}"/>
+      <then>
+        <copy todir="${project.pkgdir}">
+          <fileset refid="docfiles"/>
+        </copy>
+      </then>
+    </if>
+    <if>
+      <available file="${project.src.phpdir}"/>
+      <then>
+        <copy todir="${project.pkgdir}">
+          <fileset refid="phpfiles"/>
+        </copy>
+      </then>
+    </if>
+    <if>
+      <available file="${project.src.testunitdir}"/>
+      <then>
+        <copy todir="${project.pkgdir}">
+          <fileset refid="testfiles"/>
+        </copy>
+      </then>
+    </if>
+    <if>
+      <available file="${project.src.wwwdir}"/>
+      <then>
+        <copy todir="${project.pkgdir}">
+          <fileset refid="wwwfiles"/>
+        </copy>
+      </then>
+    </if>
     <copy todir="${project.pkgdir}">
-      <fileset refid="binfiles"/>
-      <fileset refid="datafiles"/>
-      <fileset refid="phpfiles"/>
-      <fileset refid="testfiles"/>
-      <fileset refid="wwwfiles"/>
-      <fileset refid="docfiles"/>
       <fileset refid="topleveldocfiles"/>
     </copy>
     <copy todir="${project.builddir}">
@@ -349,18 +391,28 @@
         <contains string="${project.lastBuiltTarfile}" substring="${project.name}"/>
       </not>
       <then>
-        <echo>Please run 'phing pear-package' first, then try again.</echo>
+        <fail message="Please run 'phing pear-package' first, then try again."/>
       </then>
-      <elseif>
-        <available file="${project.lastBuiltTarfile}"/>
-        <then>
-          <exec command="pear -c ${project.tmpdir}/pear-config install --alldeps -f ${project.lastBuiltTarfile}" logoutput="true" checkreturn="true"/>
-          <phingcallifexists target="local.install-vendor"/>
-        </then>
-      </elseif>
+    </if>
+
+    <if>
+      <not>
+        <available file="${project.vendordir"/>
+      </not>
+      <then>
+        <phingcall target="build-vendor" />
+      </then>
+    </if>
+
+    <if>
+      <available file="${project.lastBuiltTarfile}"/>
+      <then>
+        <exec command="pear -c ${project.tmpdir}/pear-config install --alldeps -f ${project.lastBuiltTarfile}" logoutput="true" checkreturn="true"/>
+        <phingcallifexists target="local.install-vendor"/>
+      </then>
       <else>
         <echo>Cannot find PEAR package file ${project.lastBuiltTarfile}</echo>
-        <echo>Run 'phing pear-package' to create a new PEAR package, then try again</echo>
+        <fail message="Run 'phing pear-package' to create a new PEAR package, then try again."/>
       </else>
     </if>
   </target>
