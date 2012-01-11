@@ -54,7 +54,6 @@ use Phix_Project\CommandLineLib\DefinedSwitches;
 use Phix_Project\CommandLineLib\DefinedSwitch;
 use Phix_Project\ComponentManager\Entities\LibraryComponentFolder;
 use Phix_Project\ValidationLib\MustBeIntegerInRange;
-use Phix_Project\ValidationLib\MustBeValidPEARFileRole;
 
 class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
 {
@@ -76,12 +75,6 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                          ->setWithLongSwitch('from')
                          ->setWithRequiredArg('<version>', 'the component.version to upgade from')
                          ->setArgValidator(new MustBeIntegerInRange(1, LibraryComponentFolder::LATEST_VERSION - 1));
-
-                $switches->addSwitch('subset', 'only create a subset of the src/ folders')
-                         ->setWithLongSwitch('subset')
-                         ->setWithRequiredArg('<role>[,<role> ...]', 'a comma-separated list of the file roles to support')
-                         ->setArgValidator(new MustBeValidPEARFileRole())
-                         ->setArgHasDefaultValueOf('bin,data,php,tests,www');
 
                 return $switches;
         }
