@@ -725,6 +725,10 @@ class LibraryComponentFolder extends ComponentFolder
          * * new src/README.md file, explaining what each of the folders
          *   in the src/ folder are for
          * * phpunit.xml becomes phpunit.xml.dist
+         * * updated build.xml file to support components with only a
+         *   subset of the standard src/ folders
+         * * updated unit-tests/bootstrap.php to enable ContractLib if
+         *   it is installed
          */
         protected function upgradeFrom10To11()
         {
@@ -740,5 +744,8 @@ class LibraryComponentFolder extends ComponentFolder
                         // into place alongside their file
                         $this->copyFilesFromDataFolder(array('phpunit.xml.dist'));
                 }
+
+                $this->createBuildFile();
+                $this->createBootstrapFile();
         }
 }
