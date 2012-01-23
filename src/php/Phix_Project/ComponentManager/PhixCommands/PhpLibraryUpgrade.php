@@ -93,9 +93,12 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 $se = $context->stderr;
 
                 // step 1: parse the options
-                $options  = $this->getCommandOptions();
-                $parser   = new CommandLineParser();
-                list($parsedSwitches, $argsIndex) = $parser->parseSwitches($args, $argsIndex, $options);
+                list ($return, $parsedSwitches) = $this->parseSwitches($args, $argsIndex);
+                if ($return != 0)
+                {
+                        // something went wrong
+                        return $return;
+                }
 
                 // step 2: verify the args
                 $errors = $parsedSwitches->validateSwitchValues();
