@@ -2,7 +2,6 @@
 
 /**
  * Copyright (c) 2011 Stuart Herbert.
- * Copyright (c) 2010 Gradwell dot com Ltd.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +37,6 @@
  * @subpackage  ComponentManager
  * @author      Stuart Herbert <stuart@stuartherbert.com>
  * @copyright   2011 Stuart Herbert. www.stuartherbert.com
- * @copyright   2010 Gradwell dot com Ltd. www.gradwell.com
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link        http://www.phix-project.org
  * @version     @@PACKAGE_VERSION@@
@@ -49,42 +47,40 @@ namespace Phix_Project\ComponentManager\PhixCommands;
 use Phix_Project\Phix\CommandsList;
 use Phix_Project\Phix\Context;
 use Phix_Project\PhixExtensions\CommandInterface;
+use Phix_Project\CommandLineLib\CommandLineParser;
 use Phix_Project\CommandLineLib\DefinedSwitches;
 use Phix_Project\CommandLineLib\DefinedSwitch;
-use Phix_Project\ValidationLib\MustBePearFileRole;
-
 use Phix_Project\ComponentManager\Entities\LibraryComponentFolder;
 
-class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
+class PhpLibraryRemoveUnusedRoles extends ComponentCommandBase implements CommandInterface
 {
         public function getCommandName()
         {
-                return 'php-library:init';
+                return 'php-library:removeunusedroles';
         }
 
         public function getCommandDesc()
         {
-                return 'initialise the directory structure of a php-library component';
+                return 'remove the folders for all unused PEAR-Installer file roles from this component';
         }
 
         public function getCommandOptions()
         {
                 $switches = new DefinedSwitches();
 
-                $switches->addSwitch('subset', 'only create a subset of the src/ folders')
-                         ->setWithLongSwitch('subset')
-                         ->setWithRequiredArg('<role>[,<role> ...]', 'a comma-separated list of the file roles to support')
-                         ->setArgValidator(new MustBePearFileRole())
-                         ->setArgHasDefaultValueOf('bin,data,doc,php,test,www');
+                $switches->addSwitch('dryrun', 'list the roles and folders that would be removed if you ran the command without this switch')
+                         ->setWithShortSwitch('p')
+                         ->setWithLongSwitch('dryrun')
+                         ->setWithLongSwitch('pretend');
 
                 return $switches;
         }
 
-        public function  getCommandArgs()
+        public function getCommandArgs()
         {
                 return array
                 (
-                        '<folder>'      => '<folder> is a path to an existing folder, which you must have permission to write to.',
+                        '[<folder>]' => '<folder> is the path to your PHP component',
                 );
         }
 
@@ -100,15 +96,13 @@ class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
                         // something went wrong ... bail
                         return $return;
                 }
+                $dryRun = false;
+                if ($parsedSwitches->testHasSwitch('dryrun'))
+                {
+                        $dryRun = true;
+                }
 
-                // build the list of roles to support
-                //
-                // we know that the string exists, and that it contains
-                // one or more valid roles
-                $subsetString = $parsedSwitches->getFirstArgForSwitch('subset');
-                $subsetRoles  = explode(',', $subsetString);
-
-                // do we have a folder to init?
+                // do we have a folder to strip?
                 $errorCode = $this->validateFolder($args, $argsIndex, $context);
                 if ($errorCode !== null)
                 {
@@ -116,38 +110,36 @@ class PhpLibraryInit extends ComponentCommandBase implements CommandInterface
                 }
                 $folder = $args[$argsIndex];
 
-                // has the folder already been initialised?
+                // can we work with this folder?
                 $lib = new LibraryComponentFolder($folder);
-                if ($lib->state != LibraryComponentFolder::STATE_EMPTY)
+                switch ($lib->state)
                 {
-                        $se->output($context->errorStyle, $context->errorPrefix);
+                        case LibraryComponentFolder::STATE_NEEDSUPGRADE:
+                        case LibraryComponentFolder::STATE_UPTODATE:
+                                // yes we can
+                                break;
 
-                        // what do we need to tell the user to do?
-                        switch ($lib->state)
-                        {
-                                case LibraryComponentFolder::STATE_UPTODATE:
-                                        $se->outputLine(null, "folder has already been initialised");
-                                        break;
+                        case LibraryComponentFolder::STATE_EMPTY:
+                                $se->output($context->errorStyle, $context->errorPrefix);
+                                $se->outputLine(null, "folder is not a php-library component");
+                                $se->output(null, 'use ');
+                                $se->output($context->commandStyle, $context->argvZero . ' php-library:init');
+                                $se->outputLine(null, ' to initialise this folder');
+                                return 1;
 
-                                case LibraryComponentFolder::STATE_NEEDSUPGRADE:
-                                        $se->outputLine(null, "folder has been initialised; needs upgrade");
-                                        $se->output(null, 'use ');
-                                        $se->output($context->commandStyle, $context->argvZero . ' php-library:upgrade');
-                                        $se->outputLine(null, ' to upgrade this folder');
-                                        break;
+                        case LibraryComponentFolder::STATE_INCOMPATIBLE:
+                                $se->output($context->errorStyle, $context->errorPrefix);
+                                $se->output($context->errorStyle, $context->errorPrefix);
+                                $se->outputLine(null, 'folder is not a php-library component');
+                                return 1;
 
-                                default:
-                                        $se->outputLine(null, 'I do not know what to do with this folder');
-                                        break;
-                        }
-
-                        return 1;
+                        default:
+                                $se->output($context->errorStyle, $context->errorPrefix);
+                                $se->outputLine(null, 'I do not know what to do with this folder');
+                                return 1;
                 }
 
                 // if we get here, we have a green light
-                $lib->createComponent($subsetRoles);
-
-                // if we get here, it worked (ie, no exception!!)
-                $so->outputLine(null, 'Initialised empty php-library component in ' . $folder);
+                $lib->removeUnusedRoles($context, $dryRun);
         }
 }

@@ -70,15 +70,15 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
         public function getCommandOptions()
         {
                 $switches = new DefinedSwitches();
-                
+
                 $switches->addSwitch('from', 'upgrade from a given component.version, ignoring what build.properties file says')
                          ->setWithLongSwitch('from')
                          ->setWithRequiredArg('<version>', 'the component.version to upgade from')
                          ->setArgValidator(new MustBeIntegerInRange(1, LibraryComponentFolder::LATEST_VERSION - 1));
-                
+
                 return $switches;
         }
-        
+
         public function getCommandArgs()
         {
                 return array
@@ -93,9 +93,12 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 $se = $context->stderr;
 
                 // step 1: parse the options
-                $options  = $this->getCommandOptions();
-                $parser   = new CommandLineParser();
-                list($parsedSwitches, $argsIndex) = $parser->parseSwitches($args, $argsIndex, $options);
+                list ($return, $parsedSwitches) = $this->parseSwitches($args, $argsIndex);
+                if ($return != 0)
+                {
+                        // something went wrong
+                        return $return;
+                }
 
                 // step 2: verify the args
                 $errors = $parsedSwitches->validateSwitchValues();
@@ -120,7 +123,7 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 {
                         $upgradeFrom = $parsedSwitches->getFirstArgForSwitch('from');
                 }
-                
+
                 // do we have a folder to init?
                 $errorCode = $this->validateFolder($args, $argsIndex, $context);
                 if ($errorCode !== null)
@@ -130,7 +133,7 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                 $folder = $args[$argsIndex];
 
                 // has the folder already been initialised?
-                $lib = new LibraryComponentFolder($folder);                
+                $lib = new LibraryComponentFolder($folder);
                 if ($lib->state != LibraryComponentFolder::STATE_NEEDSUPGRADE)
                 {
                         // what do we need to tell the user to do?
@@ -158,8 +161,8 @@ class PhpLibraryUpgrade extends ComponentCommandBase implements CommandInterface
                                         $se->output($context->errorStyle, $context->errorPrefix);
                                         $se->outputLine(null, 'folder is not a php-library component');
                                         return 1;
-                        
-                                
+
+
                                 default:
                                         $se->output($context->errorStyle, $context->errorPrefix);
                                         $se->outputLine(null, 'I do not know what to do with this folder');
