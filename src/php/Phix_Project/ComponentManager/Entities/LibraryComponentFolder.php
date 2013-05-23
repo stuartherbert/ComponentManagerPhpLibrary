@@ -52,7 +52,7 @@ use Phix_Project\ContractLib\Contract;
 class LibraryComponentFolder extends ComponentFolder
 {
         const COMPONENT_TYPE = 'php-library';
-        const LATEST_VERSION = 11;
+        const LATEST_VERSION = 12;
         const DATA_FOLDER = '@@DATA_DIR@@/ComponentManagerPhpLibrary/php-library';
 
         protected $activeRoles = array();
@@ -747,5 +747,16 @@ class LibraryComponentFolder extends ComponentFolder
 
                 $this->createBuildFile();
                 $this->createBootstrapFile();
+        }
+
+        /**
+         * The changes between v11 and v12 are:
+         *
+         * * the 'build-vendor' step in build.xml now removes the
+         *   component's code and tests from the vendor/ folder
+         */
+        protected function upgradeFrom11To12()
+        {
+                $this->createBuildFile();
         }
 }
